@@ -18,9 +18,10 @@ public class BayesianSample {
 			negative = new HashMap<String, Double>();
 	private static Set<String> vocabulary = new HashSet<String>();
 	private static final String CHARACTERS[] = {",", ".", "`", "¬", "<", ">", "\\", "{", "}", "£", "€", "%", "^", "&", "*", "?", "@", "\"", ";", ":",
-			"~", "#", "_", "-", "|", "!", "(", ")", "+", "=", "¦", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", " "};
+			"~", "#", "_", "-", "|", "!", "(", ")", "'+'", "=", "¦", "'['", "']'", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", " ", "$"};
 	private static final String MEANINGLESS_WORDS[] = {"a", "b", "c", "d", "e", "f", "g", "h", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
-			"u", "v", "w", "x", "y", "z", "the", "be", "will", "he", "she", "it", "his", "her", "hers", "how", "name", "peace", "fruit", "an", "or", " ", "!"};
+			"u", "v", "w", "x", "y", "z", "the", "be", "will", "he", "she", "it", "his", "her", "hers", "how", "name", "peace", "fruit", "an", "or",
+			" ", "!"};
 	
 	public static void main(String[] args) {
 		
@@ -116,14 +117,17 @@ public class BayesianSample {
 	private static boolean simpleParsing(String word){
 		
 		//Check if it"s not a character then search if its a meaningless word
-		if(! isCharacterCheck(word))
-			if(! isMeaninglessWordCheck(word))
-				//if(! isCharacterInFrontOfWord(word))
+		if(! (word.length() <= 1))
+			if(! isCharacterCheck(word))
+				if(! isMeaninglessWordCheck(word))
+					if(! isCharacterInFrontOfWord(word))
 					return true;
 		
 		//Else return false
 		return false;
 	}
+	
+	//private static boolean wordIs1Len()
 	
 	private static boolean isCharacterInFrontOfWord(String word){
 		
@@ -167,8 +171,9 @@ public class BayesianSample {
 	private static boolean isCharacterCheck(String word){
 
 		for(String i : CHARACTERS)
-			if(word.equals(i))
-				return true;
+			if(i.length() == 1)
+				if(word.equals(i))
+					return true;
 		
 		return false;
 	}
