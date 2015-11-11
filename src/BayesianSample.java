@@ -18,7 +18,7 @@ public class BayesianSample {
 			negative = new HashMap<String, Double>();
 	private static Set<String> vocabulary = new HashSet<String>();
 	private static final String CHARACTERS[] = {",", ".", "`", "¬", "<", ">", "\\", "{", "}", "£", "€", "%", "^", "&", "*", "?", "@", "\"", ";", ":",
-			"~", "#", "_", "-", "|", "!", "(", ")", "'+'", "=", "¦", "'['", "']'", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", " ", "$"};
+			"~", "#", "_", "-", "|", "!", "(", ")", "'+'", "=", "¦", "'['", "']'", "'", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", " ", "$"};
 	private static final String MEANINGLESS_WORDS[] = {"a", "b", "c", "d", "e", "f", "g", "h", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
 			"u", "v", "w", "x", "y", "z", "the", "be", "will", "he", "she", "it", "his", "her", "hers", "how", "name", "peace", "fruit", "an", "or",
 			" ", "!"};
@@ -27,7 +27,6 @@ public class BayesianSample {
 		
 		// Set will contain all unique words from the dataset
 		//Set<String> vocabulary = new HashSet<String>();
-		
 		
 		// Acccess all files in the dataset and store the words in the set
 		loadFilesFromDirectory("pos", vocabulary);
@@ -41,7 +40,9 @@ public class BayesianSample {
 		printPosNeg(negative, "Negative");
 		
 		calculateProbabilityOfEachWord(positive);
+		calculateProbabilityOfEachWord(negative);
 		createModel(positive, POS);
+		createModel(negative, NEG);
 		System.out.println("Total Number Of words -- " + totalNumberOfWords);
 	}
 	
@@ -88,23 +89,8 @@ public class BayesianSample {
 				String word = reader.next().trim().toLowerCase();
 				//System.out.println(word);
 				
-				if(simpleParsing(word))
-					if(vocabulary.add(word))
-					{
-						if(fileName.contains("pos"))
-							positive.put(word, (double) 1);
-						
-						if(fileName.contains("neg"))
-							negative.put(word, (double) 1);
-					}
-					else if(!(vocabulary.add(word)))
-					{
-						if(fileName.contains("pos"))
-							positive.put(word, (positive.containsKey(word) ? positive.get(word) : 0)+1);
-						
-						if(fileName.contains("neg"))
-							negative.put(word, (negative.containsKey(word) ? negative.get(word) : 0)+1);
-					}
+				if(simpleParsing(word, fileName))
+					addWord(word, fileName);
 				
 				totalNumberOfWords++;
 			}
@@ -114,20 +100,55 @@ public class BayesianSample {
 		}
 	}	
 	
-	private static boolean simpleParsing(String word){
+	private static void addWord(String word, String fileName){
+		if(vocabulary.add(word))
+		{
+			if(fileName.contains("pos"))
+				positive.put(word, (double) 1);
+			
+			if(fileName.contains("neg"))
+				negative.put(word, (double) 1);
+		}
+		else if(!(vocabulary.add(word)))
+		{
+			if(fileName.contains("pos"))
+				positive.put(word, (positive.containsKey(word) ? positive.get(word) : 0)+1);
+			
+			if(fileName.contains("neg"))
+				negative.put(word, (negative.containsKey(word) ? negative.get(word) : 0)+1);
+		}
+	}
+	
+	private static boolean simpleParsing(String word, String fileName){
 		
 		//Check if it"s not a character then search if its a meaningless word
-		if(! (word.length() <= 1))
-			if(! isCharacterCheck(word))
-				if(! isMeaninglessWordCheck(word))
-					if(! isCharacterInFrontOfWord(word))
-					return true;
+		if(! isDigit(word))
+			if(! (word.length() <= 2))
+				if(! isCharacterCheck(word))
+					if(! isMeaninglessWordCheck(word, fileName))
+						if(! isCharacterInFrontOfWord(word))
+							return true;
 		
 		//Else return false
 		return false;
 	}
 	
-	//private static boolean wordIs1Len()
+	private static boolean isDigit(String word){
+		if(word.length() == 1)
+			if(Character.isDigit(word.charAt(word.length()-1)))
+				return true;
+		return false;
+	}
+	
+	private static void forwardSlashInTheWord(String word, String fileName){
+		
+		if (word.contains("/"))
+		{
+			String[] splitWord = word.split("/");
+			for(String s : splitWord)
+				addWord(s, fileName);
+		}
+	}
 	
 	private static boolean isCharacterInFrontOfWord(String word){
 		
@@ -136,17 +157,16 @@ public class BayesianSample {
 			{
 				if(word.startsWith(c, 0))
 				{
-					String splitWord[] = word.split(c);
+					String splitWord[] = word.split("\"" + c + "\"");
 					
 					for(String sw : splitWord)
 						if(! sw.contains(c))
 							word = sw;
-						
 				}
 				
 				if(word.endsWith(c))
 				{
-					String splitWord[] = word.split(c);
+					String splitWord[] = word.split("\"" + c + "\"");
 					
 					for(String sw : splitWord)
 						if(! sw.contains(c))
@@ -154,13 +174,12 @@ public class BayesianSample {
 				}
 				return true;
 			}
-				
 		}
-		
 		return false;
 	}
 	
-	private static boolean isMeaninglessWordCheck(String word){
+	private static boolean isMeaninglessWordCheck(String word, String fileName){
+		forwardSlashInTheWord(word, fileName);
 		for (String s : MEANINGLESS_WORDS)
 			if(word.equals(s))
 				return true;
@@ -171,9 +190,8 @@ public class BayesianSample {
 	private static boolean isCharacterCheck(String word){
 
 		for(String i : CHARACTERS)
-			if(i.length() == 1)
-				if(word.equals(i))
-					return true;
+			if(word.equals(i))
+				return true;
 		
 		return false;
 	}
@@ -201,7 +219,7 @@ public class BayesianSample {
 		
 		for(String word : posOrNeg.keySet())
 		{
-			double pV = (Math.log(Double.parseDouble(posOrNeg.get(word).toString()) + Math.log(posOrNeg.size()))+1);
+			double pV = (Math.log(Double.parseDouble(posOrNeg.get(word).toString()) / posOrNeg.size())+1);
 			posOrNeg.put(word, pV);
 		}
 		
@@ -229,65 +247,5 @@ public class BayesianSample {
 		}
 	}
 
-	private static void populateHashMap(String fileName) throws FileNotFoundException {
-		File file = new File(fileName);
-		FileReader fr;
-		try {
-			fr = new FileReader(file);
-			BufferedReader br = new BufferedReader(fr);
-			String line;
-
-			while ((line = br.readLine()) != null)
-				splitString(line, fileName);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	private static void splitString(String line, String fileName) {
-		String keyValue[] = line.split(" ");
-
-		if (keyValue.length == 2)
-			if (fileName.equalsIgnoreCase("pos"))
-				positive.put(keyValue[0], Double.parseDouble(keyValue[1]));
-			else if (fileName.equalsIgnoreCase("neg"))
-				negative.put(keyValue[0], Double.parseDouble(keyValue[1]));
-			else
-				System.out.println("No such file Exists in the directory");
-
-		else
-			System.out.println("Error length");
-	}
-
-	private static double calculatePVOfDocument(String fileName, Set<String> wordsInTheDocument, HashMap<String, Double> posOrNeg) {
-		double sumOfPV = 0;
-		for (String word : wordsInTheDocument)
-			if (! ((Set<String>) posOrNeg).add(word))
-				sumOfPV += Double.parseDouble(posOrNeg.get(word).toString());
-		
-		sumOfPV += Math.log(posOrNeg.size())+1;
-		sumOfPV /= (totalNumberOfWords + vocabulary.size());
-		
-		return sumOfPV;
-	}
-
-	//Another class
-	/*private static void determineThePosOrNegReview() {
-		// read single file into the array
-
-		double posPV = calculaPVOfADocument("pos", words, positive);
-		double negPV = calculatePVOfADocument("neg", words, negative);
-
-		if (posPV > negPV)
-			System.out.println("This File has a positive review");
-		else if (negPV > posPV)
-			System.out.println("This document has a negative review");
-		else if (posPV == negPV)
-			System.out.println("This file has a neutral review");
-		else
-			System.out.println("Error !!-!!");
-
-	}*/
+	
 }
