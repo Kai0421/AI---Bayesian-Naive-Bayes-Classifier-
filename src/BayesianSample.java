@@ -219,10 +219,10 @@ public class BayesianSample {
 		
 		for(String word : posOrNeg.keySet())
 		{
-			double pV = (Math.log(Double.parseDouble(posOrNeg.get(word).toString()) / posOrNeg.size())+1);
-			posOrNeg.put(word, pV);
+			double pV = (Double.parseDouble(posOrNeg.get(word).toString())+1/((totalNumberOfWords) + 2));
+			double logOfPv = Math.log(pV);
+			posOrNeg.put(word, logOfPv);
 		}
-		
 	}
 
 	private static void createModel(HashMap<String, Double> posOrNeg, String fileName) {
