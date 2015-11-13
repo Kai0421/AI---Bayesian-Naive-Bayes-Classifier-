@@ -1,8 +1,6 @@
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,8 +15,8 @@ public class BayesianSample {
 	private static HashMap<String, Double> positive = new HashMap<String, Double>(),
 			negative = new HashMap<String, Double>();
 	private static Set<String> vocabulary = new HashSet<String>();
-	private static final String CHARACTERS[] = {",", ".", "`", "¬", "<", ">", "\\", "{", "}", "£", "€", "%", "^", "&", "*", "?", "@", "\"", ";", ":",
-			"~", "#", "_", "-", "|", "!", "(", ")", "'+'", "=", "¦", "'['", "']'", "'", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", " ", "$"};
+	private static final char CHARACTERS[] = {',', '.', '`', '¬', '<', '>', '\\', '{', '}', '£', '€', '%', '^', '&', '*', '?', '@', '\'', ';', ':',
+			'~', '#', '_', '-', '|', '!', '(', ')', '+', '=', '¦', '[', ']', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ', '$'};
 	private static final String MEANINGLESS_WORDS[] = {"a", "b", "c", "d", "e", "f", "g", "h", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
 			"u", "v", "w", "x", "y", "z", "the", "be", "will", "he", "she", "it", "his", "her", "hers", "how", "name", "peace", "fruit", "an", "or",
 			" ", "!"};
@@ -52,7 +50,7 @@ public class BayesianSample {
 	 */
 	private static void loadFilesFromDirectory(String dirName, Set<String> vocabulary) {
 		
-		String path = ".\\" + S_IMDB +"\\"+dirName+"\\"; 
+		String path = ".\\" + L_IMDB +"\\"+dirName+"\\"; 
 				 
 		String fileName;
 		File folder = new File(path);
@@ -123,11 +121,9 @@ public class BayesianSample {
 		
 		//Check if it"s not a character then search if its a meaningless word
 		if(! isDigit(word))
-			if(! (word.length() <= 2))
-				if(! isCharacterCheck(word))
-					if(! isMeaninglessWordCheck(word, fileName))
-						if(! isCharacterInFrontOfWord(word))
-							return true;
+			if(word.length() >= 2)
+				if(! isCharacterCheck(word, fileName))
+					return true;
 		
 		//Else return false
 		return false;
@@ -150,31 +146,30 @@ public class BayesianSample {
 		}
 	}
 	
-	private static boolean isCharacterInFrontOfWord(String word){
+	private static boolean isCharacterInFrontOfWord(String word, char symbol, String fileName){
+		String regexPunctuation = "\\p{Punct}", regexDigit = "\\p{Digit}";
 		
-		for (String c : CHARACTERS) {
-			if(word.contains(c))
-			{
-				if(word.startsWith(c, 0))
-				{
-					String splitWord[] = word.split("\"" + c + "\"");
-					
-					for(String sw : splitWord)
-						if(! sw.contains(c))
-							word = sw;
-				}
-				
-				if(word.endsWith(c))
-				{
-					String splitWord[] = word.split("\"" + c + "\"");
-					
-					for(String sw : splitWord)
-						if(! sw.contains(c))
-							word = sw;
-				}
-				return true;
-			}
+		if(Character.isDigit(symbol))
+		{
+			String wordSplit[] = word.split(regexDigit);
+			for(String i : wordSplit)
+				if(! i.equals(symbol+""))
+					if(! isMeaninglessWordCheck(word, fileName))
+						
+						return true;
 		}
+		else if(Character.isDigit(symbol))
+		{
+			String wordSplit[] = word.split(regexPunctuation);
+			for(String i : wordSplit)
+				if(! i.equals(symbol+""))
+					if(! isMeaninglessWordCheck(word, fileName))
+						if(word.length() >= 2 || Character.isDigit(word.charAt(0)))
+							//addWord(word, fileName);
+							return true;
+		}
+
+
 		return false;
 	}
 	
@@ -187,11 +182,12 @@ public class BayesianSample {
 		return false;
 	}
 	
-	private static boolean isCharacterCheck(String word){
+	private static boolean isCharacterCheck(String word, String fileName){
 
-		for(String i : CHARACTERS)
-			if(word.equals(i))
-				return true;
+		for(char i : CHARACTERS)
+			if(word.charAt(0) == i)
+				if(! isCharacterInFrontOfWord(word, i, fileName))
+					return true;
 		
 		return false;
 	}
@@ -246,6 +242,4 @@ public class BayesianSample {
 			e.printStackTrace();
 		}
 	}
-
-	
 }

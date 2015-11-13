@@ -3,24 +3,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.security.PolicySpi;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Scanner;
-import java.util.Set;
 
 public class TestingModel {
 	
-	private final String L_IMDB = "LargeIMDB", S_IMDB = "SmallIMDB", TEST_DATA = "smallTest", POS = "pos.txt", NEG = "neg.txt";
+	private final String  TEST_DATA = "smallTest", POS = "pos.txt", NEG = "neg.txt";
 	private HashMap<String, Double> positive = new HashMap<String, Double>(),
 			negative = new HashMap<String, Double>();
 	private int numberOfPosFile = 0, numberOfNegFile = 0;	
-	private static final String CHARACTERS[] = {",", ".", "`", "¬", "<", ">", "\\", "{", "}", "£", "€", "%", "^", "&", "*", "?", "@", "\"", ";", ":",
-			"~", "#", "_", "-", "|", "!", "(", ")", "'+'", "=", "¦", "'['", "']'", "'", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", " ", "$"};
-	private static final String MEANINGLESS_WORDS[] = {"a", "b", "c", "d", "e", "f", "g", "h", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
-			"u", "v", "w", "x", "y", "z", "the", "be", "will", "he", "she", "it", "his", "her", "hers", "how", "name", "peace", "fruit", "an", "or",
-			" ", "!"};
 	
 	private void loadFilesFromDirectory(String dirName) {
 
@@ -104,18 +95,16 @@ public class TestingModel {
 	}
 
 	private double calculatePVOfDocument(String word, HashMap<String, Double> posOrNeg) {
-		double sumOfPV = 0;
+		
 		if (posOrNeg.containsKey(word))
-			sumOfPV += Double.parseDouble(posOrNeg.get(word).toString());
+			return Double.parseDouble(posOrNeg.get(word).toString());
 
-		return sumOfPV;
+		return 0;
 	}
 	
 
 	private void determineThePosOrNegReview(double posPV, double negPV) {
 		
-//		System.out.println("Positive -- " + posPV);
-//		System.out.println("Negative -- " + negPV);
 		if (posPV > negPV)
 			numberOfPosFile++;
 		else if (negPV > posPV)	
